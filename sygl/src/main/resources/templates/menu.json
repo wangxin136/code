@@ -1,0 +1,42 @@
+[
+	{
+		"text":"基本信息",
+		"children":[
+			{
+				"text":"商品管理",
+				"href":"toSp.do"
+			},{
+				"text":"供应商管理",
+				"href":"toGys.do"
+			},{
+				"text":"库房管理",
+				"href":"toKf.do"
+			},{
+				"text":"客商管理",
+				"href":"toKs.do"
+			}
+		]
+	},{
+		"text":"经营管理",
+		"children":[
+			{
+				"text":"进货管理",
+				"href":"toJhd.do"
+			},{
+				"text":"退货管理",
+				"href":"toThd.do"
+			},{
+				"text":"销售管理",
+				"href":"toXs.do"
+			},{
+				"text":"销退管理",
+				"href":"toXt.do"
+			}
+		]
+	},{
+		"text":"往来账管理"
+	},{
+		"text":"系统管理"
+	}
+			
+]

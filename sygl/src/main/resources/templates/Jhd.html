@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<div th:include="comm::header"></div>
+	
+		<script >
+		
+//---------------------新建进货单--------------------------------------------------------------------
+			function toAdd(){
+				$('#jhdForm').form('reset');
+				$('#xqGrid').datagrid('loadData',[]);
+				$('#gysTd').click(selectGys);
+				$('#kfTd').click(selectKf);
+				$('#btns2 a').linkbutton('enable');
+				
+				
+				
+				
+				//自动生成进货单编号
+				generateJhdbh();
+				//自动生成进货时间
+				generateJhsj();
+				//自动生成进货人
+				generateJhr();
+				$('#dlg1').dialog('open').dialog('setTitle','新建进货单');
+			}
+			
+			function generateJhsj(){
+				$.post('jhsj.do',{},function(jhsj){
+					$('#jhsj').textbox('setValue',jhsj);
+				});
+			}
+			
+			function generateJhr(){
+				$('#jhrmc').textbox('setValue','[[${session.loginUser.truename}]]');
+				$('#jhr').val('[[${session.loginUser.uno}]]');
+			}
+			
+			function generateJhdbh(){
+				//JHD年月日序号0001
+				$.post('jhdbh.do',{},function(jhdbh){
+					$('#jhdbh').textbox('setValue',jhdbh);
+				});
+			}
+//---------------------选择供应商的函数---------------------------------------------------------			
+			function selectGys(){
+				$('#dlg2').dialog('open');
+			}
+			
+			function filterQuery(){
+				$('#gysGrid').datagrid('reload',{
+					gysbh:$('#gysbh').numberbox('getValue'),
+					gysmc:$('#gysmc').textbox('getValue')
+				});
+			}
+			$(function(){
+				$('#gysGrid').datagrid({
+					onDblClickRow:function(index,row){
+						$('#gysmc2').textbox('setValue',row.gysmc);
+						$('#gys').val(row.gysbh);
+						
+						$('#dlg2').dialog('close');
+					}
+				});
+			});
+//-------------------------选择库房的函数------------------------------------------------------
+			function selectKf(){
+				$('#dlg3').dialog('open');
+			}
+			function filterQuery2(){
+				$('#kfGrid').datagrid('reload',{
+					kfbh:$('#kfbh').numberbox('getValue'),
+					kfmc:$('#kfmc').textbox('getValue')
+				});
+			}
+			$(function(){
+				$('#kfGrid').datagrid({
+					onDblClickRow:function(index,row){
+						$('#kfmc2').textbox('setValue',row.kfmc);
+						$('#kf').val(row.kfbh);
+						
+						$('#dlg3').dialog('close');
+					}
+				});
+			});
+//----------------------关联商品的函数----------------------------------------------------------------
+			function toAddSp(){
+				$('#relevanceSpForm').form('clear')
+				$('#dlg4').dialog('open')
+			}
+			function selectSp(){
+				$('#dlg5').dialog('open')
+			}
+			$(function(){
+				$('#spGrid').datagrid({
+					onDblClickRow:function(index,row){
+						$('#relevance_spbh').numberbox('setValue',row.spbh);
+						$('#relevance_spmc').textbox('setValue',row.spmc);
+						$('#relevance_dw').textbox('setValue',row.dw);
+						$('#relevance_xh').textbox('setValue',row.xh);
+					
+						$('#dlg5').dialog('close');
+					}
+					
+				});
+			});
+			
+			function filterQuery3(){
+				$('#spGrid').datagrid('reload',{
+					//获取两个过滤条件
+					spbh:$('#spbh').numberbox('getValue'),
+					spmc:$('#spmc').textbox('getValue')
+				});
+			}
+			
+			function relevanceSp(){
+				var f = $('#relevanceSpForm').form('validate');//自动验证表单中的easyui组件。验证成功返回true。否则返回false
+				if(!f)return;
+				
+				//判断商品是否已经关联
+				var rows = $('#xqGrid').datagrid('getRows')//获取所有行的数据
+				for(var i=0;i<rows.length;i++){
+					if(rows[i].spbh==$('#relevance_spbh').numberbox('getValue')){
+						$.messager.alert('提示','商品已关联','error');
+						return;
+					}
+				} 
+				
+				//在详情表里添加一行数据
+				$('#xqGrid').datagrid('appendRow',{
+					spbh:$('#relevance_spbh').numberbox('getValue'),
+					spmc:$('#relevance_spmc').textbox('getValue'),
+					xh:$('#relevance_xh').textbox('getValue'),
+					dw:$('#relevance_dw').textbox('getValue'),
+					dj:$('#relevance_dj').numberbox('getValue'),
+					sl:$('#relevance_sl').numberbox('getValue'),
+				});
+				
+				var dj = $('#relevance_dj').numberbox('getValue');
+				var sl = $('#relevance_sl').numberbox('getValue');
+				var zj = $('#zj').numberbox('getValue');
+				
+				dj = parseInt(dj);
+				sl = parseInt(sl);
+				zj = parseInt(zj);
+				
+				zj += dj*sl
+				
+				$('#zj').numberbox('setValue',zj)
+				
+				$('#dlg4').dialog('close');
+			}
+//-----------------------------删除商品的函数----------------------------------------------------------------
+			function toRemoveSp(){
+				var row= $('#xqGrid').datagrid('getSelected')	
+				if(!row) return;
+				$.messager.confirm('提示','是否确认删除该商品',function(f){
+					if(f){
+						var index = $('#xqGrid').datagrid('getRowIndex',row);
+						$('#xqGrid').datagrid('deleteRow',index);
+						
+						var dj = row.dj;
+						var sl = row.sl;
+						var zj = $('#zj').numberbox('getValue');
+						
+						dj = parseInt(dj);
+						sl = parseInt(sl);
+						zj = parseInt(zj);
+ 						
+						zj -= dj*sl;
+						
+						$('#zj').numberbox('setValue',zj);
+					}
+				});
+			}
+//-----------------------保存进货单的函数-------------------------------------------------------------			
+			function save(){
+				var rows= $('#xqGrid').datagrid('getRows');
+				if(rows.length==0){
+					$.messager.alert('提示','请先关联商品','info');
+				}else{
+					var spbhs ='';
+					var sls ='';
+					var djs ='';
+					for(var i=0;i<rows.length;i++){
+						spbhs += rows[i].spbh+',';
+						sls += rows[i].sl+',';
+						djs += rows[i].dj+',';
+					}
+					$('#spbhs').val(spbhs);
+					$('#sls').val(sls);
+					$('#djs').val(djs);
+					
+					
+					$('#jhdForm').form('submit',{
+						success:function(){
+							$('#dlg1').dialog('close');
+							$.messager.show({
+								title:'提示',
+								msg:'进货单保存成功'
+							});
+							$('#jhdGrid').datagrid('reload');
+						}
+					})
+				}
+			}
+//-----------------------详情的函数--------------------------------------------------------
+			function toSearch(){
+				var row =  $('#jhdGrid').datagrid('getSelected')
+				if(!row) {
+					$.messager.alert('提示','请选择进货单','info');
+					return;
+				}
+				
+				//查找进货单的基本信息
+				$.post('jhdOne.do',{jhdbh:row.jhdbh},function(jhd){
+					$('#jhdForm').form('load',jhd);
+				},'json');
+				
+				//查找进货单的详情
+				$.post('jhdXq.do',{jhdbh:row.jhdbh},function(xqList){
+					$('#xqGrid').datagrid('loadData',xqList);
+				},'json');
+				
+				
+				//设置   单击事件不可用  ，按钮不可用
+				$('#gysTd').off('click');
+				$('#kfTd').off('click');
+				$('#btns2 a').linkbutton('disable');
+				$('#dlg1').dialog('open').dialog('setTitle','进货单详情');
+				
+			}
+		</script>
+		
+	</head>
+	<body>
+		<table id="jhdGrid" class="easyui-datagrid"
+								data-options="url:'jhd.do',pagination:true,
+												singleSelect:true,fit:true,
+												fitColumns:true,toolbar:'#btns1'">
+			<thead>
+				<tr>
+					<th data-options="field:'jhdbh',align:'center',width:100">进货单编号</th>
+					<th data-options="field:'jhsj',align:'center',width:100">进货时间</th>
+					<th data-options="field:'zj',align:'center',width:100">总价</th>
+					<th data-options="field:'jhrmc',align:'center',width:100">进货人</th>
+					<th data-options="field:'gysmc',align:'center',width:100">供应商</th>
+					<th data-options="field:'kfmc',align:'center',width:100">库房</th>
+				</tr>			
+			</thead>
+		</table>
+		<div id="btns1">
+			<a class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="toAdd()">新建</a>
+			<a class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="toSearch()">详情</a>
+		</div>
+		
+		
+		<div id="dlg1" class="easyui-dialog" data-options="closed:true,modal:true,width:600,height:500,title:'新建进货单'">
+			<div class="easyui-layout" data-options="fit:true">
+				<div data-options="region:'north',height:130" style="padding:10px;">
+					<form id="jhdForm" action="jhdsaves.do" method="post">
+						<input type="hidden" id="spbhs" name="spbhs"/>
+						<input type="hidden" id="sls" name="sls"/>
+						<input type="hidden" id="djs" name="djs"/>
+						<table align="center">
+							<tr height="30">
+								<td>进货单编号</td>
+								<td><input id="jhdbh" name="jhdbh" class="easyui-textbox" readonly="true" /></td>
+								<td>进货时间</td>
+								<td><input id="jhsj" name="jhsj" class="easyui-textbox" readonly="true" /></td>
+							</tr>
+							<tr height="30">
+								<td>进货人</td>
+								<td>
+									<input id="jhrmc" name="jhrmc" class="easyui-textbox" readonly="true" />
+									<input type="hidden" id="jhr" name="jhr"  />
+								</td>
+								<td>供应商</td>
+								<td id="gysTd">
+									<input id="gysmc2" name="gysmc" class="easyui-textbox" readonly="true" required="true"/>
+									<input type="hidden" id="gys" name="gys"/>
+								</td>
+							</tr>
+							<tr height="30">
+								<td>库房</td>
+								<td id="kfTd">
+									<input id="kfmc2" name="kfmc" class="easyui-textbox" readonly="true" required="true" />
+									<input type="hidden" id="kf" name="kf" />
+								</td>
+								<td>总价</td>
+								<td><input id="zj" name="zj" class="easyui-numberbox" readonly="true" value="0"/></td>
+							</tr>
+						</table>
+					</form>
+				</div>
+				<div data-options="region:'center'">
+					<table id="xqGrid" class="easyui-datagrid" data-options="fit:true,fitColumns:true,toolbar:'#btns2'">
+						<thead>
+							<tr>
+								<th data-options="field:'spbh',width:60,align:'center'">商品编号</th>
+								<th data-options="field:'spmc',width:100,align:'center'">商品名称</th>
+								<th data-options="field:'xh',width:100,align:'center'">型号</th>
+								<th data-options="field:'dw',width:60,align:'center'">单位</th>
+								<th data-options="field:'dj',width:60,align:'center'">单价</th>
+								<th data-options="field:'sl',width:60,align:'center'">数量</th>
+							</tr>
+						</thead>
+					</table>
+					<div id="btns2">
+						<a class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="toAddSp()">关联商品</a>
+						<a class="easyui-linkbutton" data-options="iconCls:'icon-remove'" onclick="toRemoveSp()">移除商品</a>
+						<a class="easyui-linkbutton" data-options="iconCls:'icon-save'" onclick="save()">提交</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		
+		<div id="dlg2" class="easyui-dialog" data-options="closed:true,modal:true,width:600,height:500,title:'选择供应商'">
+			<table id="gysGrid" class="easyui-datagrid" 
+										data-options="url:'gys.do',pagination:true,
+													singleSelect:true,fit:true,
+													fitColumns:true,toolbar:'#filters'
+													">
+				<thead>
+					<tr>
+						<th data-options="field:'gysbh',width:80,align:'center'">供应商编号</th>
+						<th data-options="field:'gysmc',width:80,align:'center'">供应商姓名</th>
+						<th data-options="field:'zjm',width:80,align:'center'">助记码</th>
+						<th data-options="field:'gysdz',width:80,align:'center'">供应商地址</th>
+						<th data-options="field:'gysdh',width:80,align:'center'">供应商电话</th>
+					</tr>
+				</thead>
+			</table>
+			<div id="filters">
+				<input class="easyui-numberbox" id="gysbh" name="gysbh" label="供应商编号"/>
+				<input class="easyui-textbox" id="gysmc" name="gysmc" label="供应商姓名"/>
+				<a class="easyui-linkbutton" iconCls='icon-search' onclick="filterQuery()">查询</a>
+			</div>		
+		</div>
+		
+		
+		<div id="dlg3" class="easyui-dialog" data-options="closed:true,modal:true,width:600,height:500,title:'选择库房'">
+			<table id="kfGrid" class="easyui-datagrid" 
+										data-options="url:'kf.do',pagination:true,
+						  								singleSelect:true,fit:true,
+						 								fitColumns:true,toolbar:'#filters2'
+													">
+				<thead>
+					<tr>
+						<th data-options="field:'kfbh',width:80,align:'center'">库房编号</th>
+						<th data-options="field:'kfmc',width:80,align:'center'">库房名称</th>
+						<th data-options="field:'zjm',width:80,align:'center'">助记码</th>
+						<th data-options="field:'kfdz',width:80,align:'center'">库房地址</th>
+						<th data-options="field:'kfgly',width:80,align:'center'">库房管理员</th>
+						<th data-options="field:'kflxfs',width:80,align:'center'">库房联系方式</th>
+					</tr>
+				</thead>
+			</table>
+			<div id="filters2">
+				<input class="easyui-numberbox" id="kfbh" name="kfbh" label="库房编号"/>
+				<input class="easyui-textbox" id="kfmc" name="kfmc" label="库房名称">
+				<a class="easyui-linkbutton" iconCls='icon-search' onclick="filterQuery2()">查询</a>
+			</div>
+		</div>
+		
+		
+		<div id="dlg4" class="easyui-dialog" data-options="modal:true,width:350,closed:true,title:'关联商品',buttons:'#btns3'"> 
+			<form id="relevanceSpForm"  method="post">
+				<div style="margin:10px;" onclick="selectSp()">
+					<input class="easyui-numberbox" id="relevance_spbh" name="spbh" readonly="true" required="true" data-options="prompt:'请点我'" style="width:100%"  label="商品编号" />
+				</div>			
+				<div style="margin:10px;">
+					<input class="easyui-textbox" id="relevance_spmc" name="spmc" readonly="true"  required="true" style="width:100%" label="商品名称" />
+				</div>			
+				<div style="margin:10px;">
+					<input class="easyui-textbox" id="relevance_dw" name="dw" readonly="true"  required="true" style="width:100%" label="商品单位" />
+				</div>			
+				<div style="margin:10px;">
+					<input class="easyui-textbox" id="relevance_xh" name="xh" readonly="true" required="true" style="width:100%" label="商品型号" />
+				</div>			
+				<div style="margin:10px;">
+					<input class="easyui-numberbox" id="relevance_dj" name="dj"  required="true" style="width:100%" label="单价" />
+				</div>			
+				<div style="margin:10px;">
+					<input class="easyui-numberbox" id="relevance_sl" name="sl"  required="true" style="width:100%" label="数量" />
+				</div>			
+			</form>
+		</div>
+		<div id="btns3">
+			<a class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="relevanceSp()">确定</a>
+		</div>
+		
+		
+		<div id="dlg5" class="easyui-dialog" data-options="closed:true,modal:true,width:600,height:500,title:'选择商品'">
+			<table id="spGrid" class="easyui-datagrid" 
+								data-options="url:'sp.do',pagination:true,
+										     singleSelect:true,fit:true,
+										     fitColumns:true,toolbar:'#filters3'
+										     ">
+				<thead>
+					<tr>
+						<th data-options="field:'spbh',width:80,align:'center'">商品编号</th>
+						<th data-options="field:'spmc',width:100,align:'center'">商品名称</th>
+						<th data-options="field:'zjm',width:80,align:'center'">助记码</th>
+						<th data-options="field:'dw',width:80,align:'center'">单位</th>
+						<th data-options="field:'xh',width:80,align:'center'">型号</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<div id="filters3">
+			<input class="easyui-numberbox" id="spbh" name="spbh" label="商品编号"  />
+			<input class="easyui-textbox" id="spmc" name="spmc" label="商品名称" />
+			<a class="easyui-linkbutton" iconCls="icon-search" onclick="filterQuery3()">查询</a>
+		</div>
+	</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			
+
+
+
+
+
+
+
+
+
+
+
+

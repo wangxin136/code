@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<div th:include="comm::header"></div>
+		<script>
+		$(function(){
+		  var p =$('#layout').layout('panel','center'); //获取中间面板标签
+		  	p.panel('setTitle','欢迎【[[${session.loginUser.truename}]]登录】');
+		  	
+		  	$('#tree').tree({
+		  		onClick:function(node){
+		  			if(node.href)
+		  				$('#content').attr('src',node.href);
+		  		}
+		  	});
+		});
+		</script>	
+	</head>
+	<body>
+		
+	<div id="layout" class="easyui-layout" fit="true">  
+	    <div data-options="region:'north'" style="height:70px;"></div>  
+	    <div data-options="region:'west',title:'主菜单'" style="width:200px;">
+	    	<div id="tree" class="easyui-tree" data-options="url:'menu.do',animate:true,lines:true"></div>
+	    </div>  
+	    <div data-options="region:'center',title:'center title'" >
+	    	<iframe id="content" src="" width="100%" height="100%" frameborder="0"></iframe>
+	    </div>  
+    </div>  
+		    
+	</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

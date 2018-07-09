@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wx20180409.sygl.dao.IKsDao">
+	<sql id="filters">
+		<if test="ksbh !=null and ksbh !=''">
+			and ksbh=#{ksbh}
+		</if>
+		<if test="ksmc !=null and ksmc !=''">
+			and (ksmc like concat(#{ksmc},'%') or zjm like concat(#{ksmc},'%'))
+		</if>
+	</sql>
+	
+	<select id="total" resultType="int">
+		select count(*) from t_ks where del=1
+		<include refid="filters"></include>
+	</select>
+	
+	<select id="ksList" resultType="com.wx20180409.sygl.domain.Ks">
+		select * from t_ks where del=1
+		<include refid="filters"></include>
+		order by createtime desc, ksbh desc
+		limit #{start},#{length}
+	</select>
+	
+	<update id="delete">
+		update t_ks set del=2 where ksbh=#{ksbh}
+	</update>
+	
+	<insert id="saves">
+		insert into t_ks (ksmc,zjm,ksxb,ksnl,kslxfs,fkfs,createtime,del,yl1,yl2,yl3,yl4,yl5)values
+		(#{ksmc},#{zjm},#{ksxb},#{ksnl},#{kslxfs},#{fkfs},now(),1,#{yl1},#{yl2},#{yl3},#{yl4},#{yl5})
+	</insert>
+	
+	<select id="findOne" resultType="com.wx20180409.sygl.domain.Ks">
+		select * from t_ks where ksbh=#{ksbh}
+	</select>
+	
+	<update id="update">
+		update t_ks set ksmc=#{ksmc},zjm=#{zjm},ksxb=#{ksxb},ksnl=#{ksnl},kslxfs=#{kslxfs},fkfs=#{fkfs},createtime=now(),
+		                yl1=#{yl1},yl2=#{yl2},yl3=#{yl3},yl4=#{yl4},yl5=#{yl5} where ksbh=#{ksbh}
+	</update>
+	
+</mapper>

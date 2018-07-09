@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wx20180409.sygl.dao.IUserDao">
+		
+		<select id="findUserByNameAndPass" resultType="com.wx20180409.sygl.domain.User">
+			select * from t_user where uname=#{uname} and upass=#{upass}
+		</select>
+		
+</mapper>

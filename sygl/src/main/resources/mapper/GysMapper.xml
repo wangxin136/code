@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wx20180409.sygl.dao.IGysDao">
+	<sql id="filters">
+		<if test="gysbh!=null and gysbh!=''">
+			and gysbh=#{gysbh}
+		</if>
+		<if	test="gysmc!=null and gysmc!=''">
+			and (gysmc like concat(#{gysmc},'%')  or zjm like concat(#{gysmc},'%') )
+		</if>
+	</sql>
+		
+	<select	id="total" resultType="int">
+		select count(*) from t_gys where del=1
+		<include refid="filters"></include> 
+	</select>
+	
+	<select id="fingGysByPage" resultType="com.wx20180409.sygl.domain.Gys" >
+		select * from t_gys where del=1
+		<include refid="filters"></include> 
+		order by createtime desc, gysbh desc
+		limit #{start},#{length}
+	</select>
+		
+	<update id="delete">
+		update t_gys set del=2 where gysbh=#{gysbh}
+	</update>
+	
+	<insert id="saves">
+		insert into t_gys(gysmc,zjm,gysdz,gysdh,createtime,del,yl1,yl2,yl3,yl4,yl5)
+						values (#{gysmc},#{zjm},#{gysdz},#{gysdh},now(),1,#{yl1},#{yl2},#{yl3},#{yl4},#{yl5})	
+	</insert>
+	
+	<select id="findOne" resultType="com.wx20180409.sygl.domain.Gys">
+		select * from t_gys where del=1 and gysbh = #{gysbh}
+	</select>
+	
+	<update id="update">
+		update t_gys set gysmc=#{gysmc},zjm=#{zjm},gysdz=#{gysdz},gysdh=#{gysdh},createtime=now(),yl1=#{yl1},yl2=#{yl2},yl3=#{yl3},yl4=#{yl4},yl5=#{yl5} where gysbh=#{gysbh} and del=1                    
+	</update>
+		
+</mapper>

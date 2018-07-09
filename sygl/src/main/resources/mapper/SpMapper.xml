@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wx20180409.sygl.dao.ISpDao">
+		<sql id="filters">
+			<if test="spbh !=null and spbh !=''">
+				and spbh = #{spbh}
+			</if>
+			<if test="spmc !=null and spmc !=''">
+				and (spmc like concat(#{spmc},'%')  or zjm like concat(#{spmc},'%') )
+			</if>		
+		</sql>
+		
+		<select id="total" resultType="int">
+			select count(*) from t_sp where del=1
+			<include refid="filters"></include>
+		</select>
+		
+		<select id="fingSpByPage" resultType="com.wx20180409.sygl.domain.Sp">
+			select * from t_sp where del=1
+			<include refid="filters"></include>
+			order by createtime desc, spbh desc
+			limit #{start},#{length} 
+		</select>
+		
+		<update id="delete">
+			update t_sp set del=2 where spbh =#{spbh} 
+		</update>
+		
+		<insert id="saves">
+		insert into t_sp (spmc,zjm,dw,xh,createtime,del,yl1,yl2,yl3)
+						values (#{spmc},#{zjm},#{dw},#{xh},now(),1,#{yl1},#{yl2},#{yl3})		
+		</insert>
+		
+		<select id="findOne" resultType="com.wx20180409.sygl.domain.Sp">
+			select * from t_sp where del=1 and spbh=#{spbh}
+		</select>
+		
+		<update id="update">
+			update t_sp set spmc=#{spmc},zjm=#{zjm},dw=#{dw},xh=#{xh},createtime=now(),yl1=#{yl1},yl2=#{yl2},yl3=#{yl3} where spbh = #{spbh} and del=1
+		</update>
+		
+</mapper>

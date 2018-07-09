@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wx20180409.sygl.dao.IKfDao">
+	<sql id="filters">
+		<if test="kfbh !=null and kfbh !=''">
+			and kfbh=#{kfbh}
+		</if>
+		<if test="kfmc !=null and kfmc !=''">
+			and (kfmc like concat(#{kfmc},'%') or zjm like concat(#{kfmc},'%'))
+		</if>
+	</sql>
+	
+	<select id="total" resultType="int">
+		select count(*) from t_kf where del=1 
+		<include refid="filters"></include>
+	</select>
+	
+	<select id="kfList" resultType="com.wx20180409.sygl.domain.Kf">
+		select * from t_kf where del=1
+		<include refid="filters"></include>
+		order by createtime desc, kfbh desc
+		limit #{start},#{length}
+	</select>
+	
+	<insert id="saves">
+		insert into t_kf (kfmc,zjm,kfdz,kfgly,kflxfs,createtime,del,yl1,yl2,yl3,yl4,yl5)values
+		(#{kfmc},#{zjm},#{kfdz},#{kfgly},#{kflxfs},now(),1,#{yl1},#{yl2},#{yl3},#{yl4},#{yl5})
+	</insert>
+	
+	<update id="delete">
+		update t_kf set del=2 where kfbh=#{kfbh}
+	</update>
+	
+	<select id="findOne" resultType="com.wx20180409.sygl.domain.Kf">
+		select * from t_kf where del=1 and kfbh = #{kfbh}
+	</select>
+	
+	<update id="update">
+		update t_kf set kfmc=#{kfmc},zjm=#{zjm},kfdz=#{kfdz},kfgly=#{kfgly},kflxfs=#{kflxfs},createtime=now(),
+		yl1=#{yl1},yl2=#{yl2},yl3=#{yl3},yl4=#{yl4},yl5=#{yl5} where kfbh=#{kfbh}         
+	</update>
+</mapper>

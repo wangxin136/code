@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<div th:include="comm::header"></div>
+	<script >
+		function filterQuery(){
+			$('#gysGrid').datagrid('reload',{
+				gysbh:$('#gysbh').numberbox('getValue'),
+				gysmc:$('#gysmc').textbox('getValue')
+			});
+		}
+		
+		function toDelete(){
+			var row= $('#gysGrid').datagrid('getSelected')
+			
+			
+			if(row!=null){
+				$.messager.confirm('询问','是否确认删除',function(f){
+					if(f==true){
+						$.post('gysDelete.do',{gysbh:row.gysbh},function(){
+							$('#dlg1').dialog('close');
+							$.messager.show({
+								title:'提示',
+								msg:'删除成功'
+							});
+							
+							$('#gysGrid').datagrid('reload');
+						})
+					}
+				});			
+			}
+		}
+		
+		function toAdd(){
+			$('#dlg1').dialog('open');
+		}
+		
+		function saves(){
+			$('#gysAddForm').form('submit',{
+				success:function(){
+					$('#dlg1').dialog('close');
+					$.messager.show({
+						title:'提示',
+						msg:'保存成功'
+					});	
+					$('#gysGrid').datagrid('load');
+				}
+			});
+		}
+		
+		function toUpdate(){
+			var row= $('#gysGrid').datagrid('getSelected')
+				if(row){
+					$.post('gysFindOne.do',{gysbh:row.gysbh},function(gys){
+						$('#gysUpdateForm').form('load',gys)
+						$('#dlg2').dialog('open');
+					},'json');
+				}
+		}
+		
+		function update(){
+			$('#gysUpdateForm').form('submit',{
+				success:function(){
+					$('#dlg2').dialog('close');
+					$.messager.show({
+						title:'提示',
+						msg:'修改成功'
+					});
+					$('#gysGrid').datagrid('reload');
+				}
+			});
+		}
+		
+	</script>
+
+</head>
+<body>
+	<table id="gysGrid" class="easyui-datagrid" 
+		data-options="url:'gys.do',pagination:true,
+					singleSelect:true,fit:true,
+					fitColumns:true,toolbar:'#filters'
+					">
+		<thead>
+			<tr>
+				<th data-options="field:'gysbh',width:80,align:'center'">供应商编号</th>
+				<th data-options="field:'gysmc',width:80,align:'center'">供应商姓名</th>
+				<th data-options="field:'zjm',width:80,align:'center'">助记码</th>
+				<th data-options="field:'gysdz',width:80,align:'center'">供应商地址</th>
+				<th data-options="field:'gysdh',width:80,align:'center'">供应商电话</th>
+			</tr>
+		</thead>
+	</table>
+	
+	<div id="filters">
+		<input class="easyui-numberbox" id="gysbh" name="gysbh" label="供应商编号"/>
+		<input class="easyui-textbox" id="gysmc" name="gysmc" label="供应商姓名"/>
+		<a class="easyui-linkbutton" iconCls='icon-search' onclick="filterQuery()">查询</a>
+		<a class="easyui-linkbutton" iconCls='icon-add' onclick="toAdd()">批量保存</a>
+		<a class="easyui-linkbutton" iconCls='icon-edit' onclick="toUpdate()">编辑</a>
+		<a class="easyui-linkbutton" iconCls='icon-remove' onclick="toDelete()">删除</a>
+	</div>
+	
+	<div id="dlg1" class="easyui-dialog" data-options="width:350,modal:true,closed:true,title:'批量添加',buttons:'#btns1'">
+		<div style="margin:20px;">
+			<form id="gysAddForm" action="gysSaves.do" method="post" enctype="multipart/form-data">
+				<input type="file" name="excel" />
+			</form>
+		</div>
+	</div>
+	<div id="btns1">
+		<a class="easyui-linkbutton" iconCls="icon-ok" onclick="saves()">提交</a>
+	</div>
+	
+	<div id="dlg2" class="easyui-dialog" data-options="width:350,modal:true,closed:true,title:'修改',buttons:'#btns2'">
+		<form id="gysUpdateForm" method="post" action="gysUpdate.do">
+			<div style="margin:10px;">
+				<input class="easyui-numberbox" id="gysbh" name="gysbh"  readonly="true" style="width:100%" label="供应商编号"/>
+			</div>
+			<div style="margin:10px;">
+				<input class="easyui-textbox" id="gysmc" name="gysmc"  required="true" style="width:100%" label="供应商名称"/>
+			</div>
+			<div style="margin:10px;">
+				<input class="easyui-textbox" id="gysdz" name="gysdz"  required="true" style="width:100%" label="供应商地址"/>
+			</div>
+			<div style="margin:10px;">
+				<input class="easyui-numberbox" id="gysdh" name="gysdh"  required="true" style="width:100%" label="供应商电话"/>
+			</div>
+		</form>
+	</div>
+	<div id="btns2">
+		<a class="easyui-linkbutton" iconCls="icon-ok" onclick="update()">提交</a>
+	</div>
+</body>
+</html>

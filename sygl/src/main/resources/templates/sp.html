@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+	<div th:include="comm::header"></div>
+	<script>
+//-----------------------------过滤查询函数----------------------------------------------------------	
+		function filterQuery(){
+			$('#spGrid').datagrid('reload',{
+				//获取两个过滤条件
+				spbh:$('#spbh').numberbox('getValue'),
+				spmc:$('#spmc').textbox('getValue')
+			});
+		}
+//-------------------------------删除函数---------------------------------------------------------
+		function toDelete(){
+			var row =$('#spGrid').datagrid('getSelected')
+			if(row!=null){
+				$.messager.confirm('询问','是否确认删除',function(f){
+					if(f==true){
+						//确认删除  通过异步删除
+						$.post('spDelete.do',{spbh:row.spbh},function(){
+							$.messager.show({
+								title:'提示',
+								msg:'删除成功'
+							});
+								
+							$('#spGrid').datagrid('reload');
+						})
+					}
+				});
+			}
+		}
+//---------------------------------------批量保存的函数----------------------------------------------		
+		function toAdd(){
+			$('#dlg1').dialog('open');
+		}
+		
+		
+		function saves() {
+			$('#spAddForm').form('submit', {
+				success:function() {
+					$('#dlg1').dialog('close');
+					$.messager.show({
+						title : '提示',
+						msg : '保存成功'
+					});
+					$('#spGrid').datagrid('load');
+				}
+			});
+		}
+//--------------------------------------商品修改函数--------------------------------------------------
+		function toUpdate(){
+			var row =$('#spGrid').datagrid('getSelected')
+				if(row){
+					$.post('fingOne.do',{spbh:row.spbh},function(sp){
+						$('#spUpdateForm').form('load',sp)
+						$('#dlg2').dialog('open');
+					},'json');
+				}
+		}
+		
+		function update(){
+			$('#spUpdateForm').form('submit',{
+				success:function(){
+					$('#dlg2').dialog('close');
+					$.messager.show({
+						title : '提示',
+						msg : '修改成功'
+					});
+					$('#spGrid').datagrid('reload');
+				}
+			});
+		}
+	
+	</script>
+</head>
+<body>
+	<table id="spGrid" class="easyui-datagrid"
+		data-options="url:'sp.do',pagination:true,
+					  singleSelect:true,fit:true,
+					  fitColumns:true,toolbar:'#filters'
+					  ">
+		  <thead>
+		  	  <tr>
+		  	  	  <th data-options="field:'spbh',width:80,align:'center'">商品编号</th>
+		  	  	  <th data-options="field:'spmc',width:80,align:'center'">商品名称</th>
+		  	  	  <th data-options="field:'zjm',width:80,align:'center'">助记码</th>
+		  	  	  <th data-options="field:'dw',width:80,align:'center'">单位</th>
+		  	  	  <th data-options="field:'xh',width:80,align:'center'">型号</th>
+		  	  </tr>
+		  </thead>
+	</table>
+	
+	<div id="filters">
+		<input class="easyui-numberbox" id="spbh" name="spbh" label="商品编号"/>
+		<input class="easyui-textbox" id="spmc" name="spmc" label="商品名称"/>
+		<a class="easyui-linkbutton" iconCls='icon-search' onclick="filterQuery()">查询</a>
+		<a class="easyui-linkbutton" iconCls='icon-add' onclick="toAdd()">批量保存</a>
+		<a class="easyui-linkbutton" iconCls='icon-edit' onclick="toUpdate()">编辑</a>
+		<a class="easyui-linkbutton" iconCls='icon-remove' onclick="toDelete()">删除</a>
+	</div>
+	
+	<div id="dlg1" class="easyui-dialog" data-options="modal:true,closed:true,width:350,title:'批量导入',buttons:'#btns1'">
+		<div style="margin:20px;">
+			<form id="spAddForm" action="saves.do" method="post" enctype="multipart/form-data">
+				<input type="file" name="excel"/>
+			</form>
+		</div>
+	</div>
+	<div id="btns1">
+		<a class="easyui-linkbutton" iconCls="icon-ok" onclick="saves()">提交</a>
+	</div>
+	
+	<div id="dlg2" class="easyui-dialog" data-options="modal:true,closed:true,width:350,title:'修改商品信息',buttons:'#btns2'">
+		<form  id="spUpdateForm"  action="spUpdate.do" method="post" >
+			<div style="margin:10px;">
+				<input class="easyui-textbox" id="spbh" name="spbh" readonly="true" style="width:100%"  label="商品编号"/>
+			</div>
+			<div style="margin:10px;">
+				<input class="easyui-textbox" id="spmc" name="spmc" required="true" style="width:100%" label="商品名称"/>
+			</div>
+			<div style="margin:10px;">
+				<input class="easyui-textbox" id="dw" name="dw" required="true" style="width:100%" label="商品单位"/>
+			</div>
+			<div style="margin:10px;">
+				<input class="easyui-textbox" id="xh" name="xh" required="true" style="width:100%" label="商品型号"/>
+			</div>
+		</form>
+	</div>
+	<div id="btns2">
+		<a class="easyui-linkbutton" iconCls="icon-ok" onclick="update()">提交</a>
+	</div>
+</body>
+</html>
