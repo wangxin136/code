@@ -1,7 +1,7 @@
 package com.domain;
 
 import java.util.Date;
-
+// 自动生成
 public class TabEmp {
     private Integer id;
 
