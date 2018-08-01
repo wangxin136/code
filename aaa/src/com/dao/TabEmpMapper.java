@@ -1,7 +1,7 @@
 package com.dao;
 
 import com.domain.TabEmp;
-
+//5555
 public interface TabEmpMapper {
     int deleteByPrimaryKey(Integer id);
 
